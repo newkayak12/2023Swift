@@ -13,6 +13,9 @@ var myVairable = 42
 myVairable = 12
 let myConstant = 123
 
+/**
+ A constant or variable must have the same type as the value you want to assign to it. However, you don't always have to write the type explicitly.
+ */
 
 
 
