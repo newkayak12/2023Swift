@@ -4,5 +4,6 @@
         <page name='01.SimpleValues'/>
         <page name='02.Control Flow'/>
         <page name='03.Functions and Clousres'/>
+        <page name='04.Objects and Classes'/>
     </pages>
 </playground>
