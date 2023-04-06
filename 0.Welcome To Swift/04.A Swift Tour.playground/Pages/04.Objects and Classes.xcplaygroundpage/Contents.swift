@@ -131,12 +131,51 @@ print(triangle.sideLength)
     1. Setting the value of perperties that the subclass declares.
     2. Calling the superclass's initializer.
     3. Changing the value of properties defined by the superclass. Any additional setup work that uses methods, getters, or setters can also be done at this point.
+ 
+ If you don't need to compute the property but still to provide code that's run before and after setting a new value,
+ use 'willSet' and 'didSet'. The code you provide is run any time the value changes outside of an initializer. For example, the class below ensures that the side length of its triangle is always the same as the side length of its square.
  */
 
 class TriangleAndSquare {
+    var triangle: EquilateralTriangle {
+        willSet {
+            print("triangle willSet")
+            square.sideLength = newValue.sideLength
+        }
+        didSet {
+            print("triangle didSet")
+        }
+    }
+    var square: Square {
+        willSet {
+            print("square willSet")
+            triangle.sideLength = newValue.sideLength
+        }
+        didSet {
+            print("square didSet")
+        }
+    }
+    
+    init(size: Double, name: String){
+        square = Square(sideLength: size, name: name)
+        triangle = EquilateralTriangle(sideLength: size, name: name)
+    }
     
 }
 
+var triangleAndSquare = TriangleAndSquare(size: 10, name: "another test shape")
+print(triangleAndSquare.square.sideLength)
+print(triangleAndSquare.triangle.sideLength)
 
+triangleAndSquare.square = Square(sideLength: 50, name: "LARGER SQUARE")
+print(triangleAndSquare.triangle.sideLength)
+
+/**
+ When working with optional values, you can write '?' before operations like methods, properties, and subscripting. If the value before the '?' is 'nil', everthing after the '?' is ingored and the value of whole expression is 'nil'
+ Otherwise, the optional value is unwrapped, and everthing after the '?' acts on the unwrapped value. in both cases, the value of the whole expression is an optional value.
+ */
+
+let optionalSquare: Square? = Square(sideLength: 2.5, name: "optional Square")
+let sideLength = optionalSquare?.sideLength
 
 //: [Next](@next)
