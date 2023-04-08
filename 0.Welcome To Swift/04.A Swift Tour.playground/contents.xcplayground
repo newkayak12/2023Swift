@@ -6,5 +6,9 @@
         <page name='03.Functions and Clousres'/>
         <page name='04.Objects and Classes'/>
         <page name='05.Enumertaion and Structures'/>
+        <page name='06.Concurrency'/>
+        <page name='07.Protocols and Extensions'/>
+        <page name='08.Error Handling'/>
+        <page name='09. Generics'/>
     </pages>
 </playground>
