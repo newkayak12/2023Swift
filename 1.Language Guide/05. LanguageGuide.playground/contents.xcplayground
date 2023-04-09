@@ -3,5 +3,13 @@
     <pages>
         <page name='01.Numeric Literals'/>
         <page name='02.Numeric Type Conversion'/>
+        <page name='03.Type Alias'/>
+        <page name='04.Tuple'/>
+        <page name='05.Optional and nil'/>
+        <page name='06.Assertions and Preconditions'/>
+        <page name='07.Operator'/>
+        <page name='08.String'/>
+        <page name='09.Collection'/>
+        <page name='Untitled Page'/>
     </pages>
 </playground>
