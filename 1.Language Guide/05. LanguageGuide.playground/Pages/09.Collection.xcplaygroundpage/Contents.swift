@@ -197,8 +197,105 @@ var favoriteGenres2: Set = ["Rock", "Classical", "Hip hop"]
  
     Dictionary Type Shorthand Syntax
  The type of a Swift dictionary is written in full as Dictionary<Key, Value>, where Key is the type of value that can be used as a dictionary key, and 'Values' is the type of value that the dictionary stores for those keys.
+ 
+        > A dictionary Key type must conform to the Hashable protocol, like a set's value type.
+ 
+ You can also write the type of a dictionary in shorthand form as [Key: Value]. Although the two forms are functionally identical, the shorthand form is preferred and is used throughout this guide when referring to the type of a dictionary.
+ 
+     Createing a Empty Dictionary
+ As with arrays, you can create an empty Dictionary of a certain type by using initializer syntax:
+ */
+var nameOfIntegers: [Int: String] = [:]
+
+/**
+ 
+     Creating a Dictoinary with a Dictionary Literal
+ 
+ You can aloso initialize a dictionary with a dictionary literal, which has a similar syntax to the array literal seen earlier. A dictionary literal is a shorthand way to write one or more key-value pairs as a Dictionary collection.
+ 
+ A key-value pair is a combination of a key and a value. In a dictionary literal, the key and value in each key-value pair are separated by a colon. The key-value pairs are written as a list, separated by commas, surrounded by a pair of square brackets:
+ 
+        [Key1: Valu1, Key2: Value2, Key3: Value3]
+ 
+ 
+    Accessing and Modifying a Dictionary
+*/
+
+var airports = ["YYZ": "Toronto Person", "DUB": "Dublin"]
+ 
+/**
+ You access and modify a dictionary through its methods and properties, or by using subscript syntax.
+ 
+ - count
+ - isEmpty
+ 
+ You can add a new item to a dictionary with subscript syntax. Use a new key of the appropriate type as the subscript index, and assign a new value of the appropriate type:
+ 
+    airports["LHR"] = "LONDON"
+ 
+ As an alternative to subscripting, use a dictionary's updateValue(_:forKey:) method to set or update the value for a particular key. Like the subscripti examples above, the updateValue(_:forKey:) method sets a value for a key if none exists, or update the value if that key already exists. Unlike a subscript, however, the updateValue(_:forKey:) method returns the 'old' value after performing an update. The enables you to check whether or not an update took place.
+ 
+ The updateValue(_:forKey:) method returns an optional value of the dictionary's value type. For a dictionary that stores 'String' vlaues, for example, the method returns a value of type 'String?', or "optional String". This optional value contains the old value for that key if one existed before the update, or 'nil' if no value existed:
  */
 
+if let oldValue = airports.updateValue("Dublin Airport", forKey: "DUB") {
+    print("The old value for DUB was \(oldValue)")
+}
+
+/**
+ You can aloso use subscript syntax to retrieve a value from the dictionary for a particular key. Because it's possible to request a key for which no value exsits, a dictionary's subscript returns an optional value of the dictionary's value type. If the dictionary contains a value for the requested key, the subscript returns an optional value containing the existing value for that key
+ */
+
+if let airportName = airports["DUB"] {
+    print("The name of the airport is \(airportName)")
+} else {
+    print("THat airpot isn't in the airports dictionary.")
+}
+
+/**
+ You can use subscript syntax to remove a key-value pair from a dictionary by assigning a value of nil for that key:
+ */
+
+airports["APL"] = "Apple Interantional"
+airports["APL"] = nil
+
+/**
+ Alterantively, remove a key-value pair from a dictionary with the removeValue(forKey:) method. This method removes the key-value pair if it exsits and returns the removed value, or return 'nil' if no value existed:
+ 
+ 
+        Iterating Over a Dictionary
+ 
+ You can iterate over the key-value pairs in a dictionary with a 'for-in' loop. Each item in the dictionary is returned as a (key, value) tuple, and you can decompose the tuple's members into temporary constans or variables as part of the iteration:
+ 
+ */
+
+for (airportCode, airportName) in airports {
+    print("\(airportCode) : \(airportName)")
+}
+
+/**
+ You can also retrieve an iterable collection of a dictionary's keys or values by accessing its keys and values properties:
+ */
+
+for airportCode in airports.keys {
+    print("AIRPORT CODE :: \(airportCode)")
+}
+
+for airportName in airports.values {
+    print("AIRPORT NAME :: \(airportName)")
+}
+
+/**
+ If you need to use a dictionary's keys or values with an API that takes an Array instance, initialize a new array with the keys or values propery:
+ 
+ */
+
+let airportCodes = [String](airports.keys)
+let airportNames = [String](airports.values)
+
+/**
+ Swift's Dictionary type doesn't have a defined ordering To iterate over the keys or values of a dictionary in a specific order, use the 'sorted()' method on its keys or values property.
+ */
 
 
 
