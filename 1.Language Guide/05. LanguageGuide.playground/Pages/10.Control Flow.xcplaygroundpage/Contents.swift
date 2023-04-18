@@ -147,6 +147,111 @@ print("There are \(naturalCount) \(countedThings)")
 /**
       Tuples
  
+ You can use tuples to test multiple values in the same switch statement. Each element of the tuple can be tested against a differenct value or interval of values. Alternatively, use the underscore, also known as the wildcard pattern, to match any possible value.
+ */
+let somePoint = (1, 1)
+switch somePoint {
+    case (0, 0):
+        print("ORIGIN")
+    case (_, 0):
+        print("It's on X-axis")
+    case (0, _):
+        print("It's on Y-axis")
+    case (-2...2, -2...2):
+        print("Inside the box")
+   default:
+        print("Outside the box")
+}
+
+
+/**
+    Value Bindings
+ 
+ A switch case can name the value or values it matches to temporary constants or variables, for use in the body of the case. This behavior is knwon as 'value binding', because the values are bound to temporary constant or variables within the case's body.
+ */
+let anotherPoint: (Int, Int) = (2, 0)
+switch anotherPoint {
+    case (let x, 0):
+        print("X \(x) Y 0")
+    case (0, let y):
+        print("X 0 Y \(y)")
+    case let (x, y):
+        print("X \(x) Y \(y)")
+}
+
+/**
+    Where
+ A 'switch' case can use a 'where' clause to check for additional conditions.
  */
 
+let yetAnotherPoint = (1, -1)
+switch yetAnotherPoint {
+    case let (x, y) where x == y:
+        print("\(x) == \(y)")
+    case let (x, y) where x == -y:
+        print("\(x) == \(y)")
+    case let (x, y):
+        print("\(x), \(y)")
+}
 
+
+/**
+    Compound Cases
+ Multiple switch cases that share the same body can be combined by writing several pattern after 'case', with a comma between each of the patterns. If any of the patterns match, then the case is considered to match. The patterns can be written over multiple lines if the list is long.
+ 
+ */
+let someChar: Character = "e"
+switch someChar {
+    case "a", "e", "i", "o", "u":
+        print("vowel")
+    case "b", "c", "d", "f", "g", "h", "j", "k", "m", "n", "p",
+        "q", "r", "s", "t", "v", "w", "x", "y", "z":
+        print("consonant")
+    default:
+        print("")
+}
+/**
+ Compound cases can aloso include value bindings. All of the patterns of a compound case have to inlcude the same set of value bindings, and each binding has to get a value of the same type from all of the patterns in the compund case. This ensures that, no matter which part of the compound case matched, the code in the body of the case can always access a value for the bindings and that the value always has the same type.
+ 
+    
+    Control Transfer Statements
+ Control transfer statement change the order in which your code is executed, by transferring control from one piece of code to another. Swift has five control transfer statements:
+ 
+    - continue
+    - break
+    - fallthrough
+    - return
+ 
+    - Labeled Statement ->
+         'label name': while 'condition' {
+                statements
+          }
+ 
+    - Early Exit ->
+         A 'guard' statement, like an if statment, executes statments depending on the Boolean value of an expression. You use a 'guard' statement to require that a condition must be true in order for the code after the 'guard' statement to be executed. Unlike an if statement, a 'guard' statement always has an else clause-the code inside the else clause is executed if the condition isn't true.
+ 
+    - Checking API Availabilty ->
+         Swift has built-in support for checking API availability, which ensures that you don't accidentally use APIs that are unavailable on a given deployment target
+ 
+            if #available ( platform name version, ..., *) {
+                statements to execute if the APIs are available
+            } else {
+                fallback statements to execute if the APIs are unavailable
+            }
+ */
+
+if #available (macOS 10.12, *) {
+    print("osx 10.12 later")
+} else {
+    print("other")
+}
+
+@available (macOS 11.0, *) //requires macOs 11.0 or later
+struct ColorPreference {
+    var betsColor = "blue"
+}
+
+/**
+    - throw
+    
+ */
