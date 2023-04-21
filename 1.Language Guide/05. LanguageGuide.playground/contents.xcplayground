@@ -12,7 +12,7 @@
         <page name='09.Collection'/>
         <page name='10.Control Flow'/>
         <page name='11.Functions'/>
-        <page name='Untitled Page 3'/>
-        <page name='Untitled Page 4'/>
+        <page name='12.Closures'/>
+        <page name='13.Enumerations'/>
     </pages>
 </playground>
