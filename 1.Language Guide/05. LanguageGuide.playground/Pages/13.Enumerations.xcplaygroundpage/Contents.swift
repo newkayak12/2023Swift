@@ -161,13 +161,106 @@ enum ASCIIControlCharacter: Character {
   
  Implicitly Assigned Raw Values
  
- When you're working with enumerations that store integer or string raw values, you don't have explicitly assign a raw value for each case. When you dont' Swift automatically assigns the vlaue for you.
+ When you're working with enumerations that store integer or string raw values, you don't have explicitly assign a raw value for each case. When you dont' Swift automatically assigns the value for you.
  
+ For example, when integers are used for raw values, the implicit value for each case is one more thean the previous case. If first case dosen't have a value set, its value is 0.
  
+ The enumeration below is a refinement of the earlier Planet enumeration, with integer raw values to represent each planet's order from the sun
+ */
+enum Planets: Int {
+    case mercury = 1, venus, earth, mars, jupiter, saturn, uranus, neptune
+}
+/**
+In the example above, Planet mercury has an explicit raw value of 1, Planet.venus has implicit raw value of 2, and so on.
+ 
+The enumeration below is a refinement of the eariler CompassPoints enumeration, with string raw values to represent each direction's name:
+ */
+
+enum CompassPoints: String {
+    case north, south, east, west
+}
+
+/**
+ In the example above, CompassPoints.south has an implicit raw vlua of "south", and so on.
+ You access the raw value of an enumeration case with its rawValue property:
+ */
+let earthsOrder = Planets.earth.rawValue
+let sunSetDirection = CompassPoints.west.rawValue
+
+/**
+ 
+    Initializing from a Raw Value
+ If you define an enumeration with a raw-value type, the enumeration automatically receives an initializer that takes a value of the raw value's type and returns either an enueramtion case or nil. You can cuse the initializer to try to create a new instance of the enumeration.
  
  */
 
+let possiblePlanet = Planets(rawValue: 7)
+/**
+ Not all possible Int values will find a matching planet, however, Becuase of this, the raw value initializer always returns an 'optional' enumeration case. In the example above, possiblePlanet is of type 'Planets?' of 'optional Planets'
+ 
+        The raw value initializer is a failable initializer, becuase not every raw value will return an enumeration case.
+ 
+ If you try to find a planet with a position of 11, the optional Planet value returned by the raw value initializer will be nil:
+ */
 
+let positionToFind = 11
+if let somePlanet = Planets(rawValue: positionToFind) {
+    switch somePlanet {
+        case .earth:
+            print("Most harmless")
+        default:
+            print("Not a safe place for humans")
+    }
+} else {
+    print("There isn't a planet at position \(positionToFind)")
+}
+
+/**
+    Recursive Enumerations
+ A 'recursive enumeration' is an enumeration that has another instance of the enumeration as the associated value for one or more of the enumeratoin cases. You indicate that an enumeration case is recursive by writing indirect before it, which tells the compier to insert the necessary layer of indirection.
+ */
+
+enum ArithmeticExpression {
+    case number (Int)
+    indirect case addition(ArithmeticExpression, ArithmeticExpression)
+    indirect case multiplication(ArithmeticExpression, ArithmeticExpression)
+}
+/**
+ You can also write indirect before the beginning of the enumeration to enable indirection for all of the enuermation's cases that have an associated value;
+ */
+
+indirect enum ArithmeticExpressions {
+    case number (Int)
+    case addition(ArithmeticExpressions, ArithmeticExpressions)
+    case multiplication(ArithmeticExpressions, ArithmeticExpressions)
+}
+
+/**
+ This enumeration can store three kinds of arithmetic expression: a plain number, the addition of two expression, and the multiplication of two expression, The 'addition' and 'multiplication' cases have associated values that are aloso arithmetic expression
+ */
+
+let five = ArithmeticExpression.number(5)
+let four = ArithmeticExpression.number(4)
+let sum = ArithmeticExpression.addition(five, four)
+let product = ArithmeticExpression.multiplication(sum, ArithmeticExpression.number(2))
+
+/**
+ A recursive function is a straightforward way to work with data that ahs a recursive structure.
+ */
+
+func evaluate( _ expression: ArithmeticExpression) -> Int {
+    switch expression {
+        case let .number(value):
+            return value
+        case let .addition(left, right):
+            return evaluate(left) + evaluate(right)
+        case let .multiplication(left, right):
+            return evaluate(left) * evaluate(right)
+            
+    }
+}
+
+print(evaluate(product))
 
 
 //: [Next](@next)
