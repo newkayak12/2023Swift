@@ -135,11 +135,48 @@ print(rememberdDirection)
 
 /**
         Classes Are Reference Types
+ Unlike value types, reference types are not copied when they're assigned to variable or constant, or when they're passed to a function. Rather than a copy, a reference to the same existing instance is used.
  */
 
+let tenEighty = VideoMode()
+tenEighty.resolution = hd
+tenEighty.interlaced = true
+tenEighty.name = "1080i"
+tenEighty.frameRate = 25.0
 
+/**
+ This example declares a new constant called tenEighty and sets it to refer to a new instance of the VideoMode class. The Video mode is assigned a copy of the HD resolution of 1920 by 1080 from before. It's set to be interlaced, its name is set to "1080i", and its frame rate is set to 25.0 frames per second.
+ 
+ Next, tenEighty is assigned to a new constant, called alsoTenEighty, and the frame rate of alsoTenEighty is modified:
+ */
+let alsoTenEighty = tenEighty
+alsoTenEighty.frameRate = 30.0
+/**
+ Because classes are reference types, tenEighty and alsoTenEighty actually both refer to the same VideoMode instance. Effectively, they're just two different names for the same single instace, as shown in the figure below.
+ 
+ 
+ Note that tenEighty and alosoTenEighty are declared as constants, rather than variables. However, you can still change tenEighty.frameRate and alsoTenEighty.frameRate because the values of the tenEighty and alsoTenEighty constants themselves don't actually change. tenEighty and alsoTenEighty themselves don't "store" the VideoMode instance - instead, they both refer to a VideMode instance behind the scenes. It's the frameRate proeprty of the underlying VideoMode that's changed, not the values of the constant references to that VideoMode.
+ 
+    
+        Identity Operator
+ Because classes are reference types, it's possible for multiple constants and variables to refer to the same single instance of a class behind the scenes (The smae isn't true for structures and enumerations, because they're always copied when they're assigned to constant or variable, or passed to a function).
+ 
+ 
+    - Identical to (===)
+    - Not identical to (!==)
+ 
+ */
 
+if tenEighty === alsoTenEighty {
+    print("SAME")
+} else {
+    print("DIFFERENT")
+}
 
-
+/**
+ 
+    Pointers
+ If you have experience with, C, C++, or Objective-C, you may know that these languages use pointers to refer to addresses in memory. A Swift constant or variable that refers to an instance of some reference type is similar to a pointer in C, but isn't a direct pointer to an address in memory, and doesn't require you to write an asterisk to inicate that you are creating a reference. Instead, these references are defined like any other constant or vairable in Swift. The standart library provides pointer an buffer types that you can use if you need to interact with pointers directly
+ */
 
 //: [Next](@next)
