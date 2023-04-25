@@ -247,6 +247,8 @@ struct TwelveOrLess {
 struct SmallRectangle {
     @TwelveOrLess var height: Int
     @TwelveOrLess var width: Int
+    
+    init(){}
 }
 
 var rectangle = SmallRectangle()
@@ -266,23 +268,268 @@ print(rectangle.height)
  For example, here's a version of SmallRectangle from the previous code listing that wraps its properties in the TwelveOrLess structure explicitly, instead of writing @TweleveorLess as an attribute:
  */
 
-struct SmallRectangle {
+struct SmallRectangles {
     private var _height = TwelveOrLess()
-    private var _width = TwelveorLess()
+    private var _width = TwelveOrLess()
     
     var height: Int {
-        get { return height.wrappedValue }
+        get { return _height.wrappedValue }
         set { _height.wrappedValue = newValue}
     }
     var width: Int {
-        get { return width.wrappedValue }
-        set { width.wrappedValue = newValue}
+        get { return _width.wrappedValue }
+        set { _width.wrappedValue = newValue}
     }
 }
 
 /**
  The _height and _width properties store an instance of the proeprty wrapper, TwelveOrLess. The getter and setter for height and width wrap access to the wrappedValue property.
+ 
+ 
+    Setting Initial Values for Wrapped Properties
+ The code in the examples above sets the initial value for the wrapped property by giving number an initial value in the definition of 'TwelveOrLess'. Code that uses this property wrapper can't specify a different initial value for a property that's wrapped by 'TwelveOrLess' - for example, the definition of 'SmallRectangle' can't give height or width initial values. To support setting an initial value or other customization, the property wrapper needs to add an initialzier. here's an expanded version of TwelveOrLess called SmallNumber that defines initializers that set the rapped and maximum value:
  */
+@propertyWrapper
+struct SmallNumber {
+    private var maximum: Int
+    private var number: Int
+    
+    var wrappedValue: Int {
+        get {
+            return number
+        }
+        set {
+            number = min(newValue, maximum)
+        }
+    }
+    
+    init() {
+        maximum = 12
+        number = 0
+    }
+    init(wrappedValue: Int) {
+        maximum = 12
+        number = min(wrappedValue, maximum)
+    }
+    init(wrappedValue: Int, maximum: Int) {
+        self.maximum = maximum
+        number = min (wrappedValue, maximum)
+    }
+    
+}
+
+/**
+ The instance of SmallNumber that wrap height and width are crated by calling SmallNumber(). The code inside that initializer sets the initial wrapped value and the inital maximum value, using the defauclt values of zero and 12. The property wrapper still provides all of the initial values, like the eariler example that used TwelveOrLess in SmallRectangle. Unlike that exmaple, 'SmallNumber' also supports writing those initial values as part of declaring the property.
+ 
+ When you specify an initial value ofr the property, Swift uses the init(wrppaedValue:) initializer to set up the wraper.
+ */
+
+struct UnitRectangle {
+    @SmallNumber var height: Int = 1
+    @SmallNumber var width: Int = 1
+}
+
+var unitRectangle = UnitRectangle()
+print(unitRectangle.height, unitRectangle.width)
+/**
+ When you write = 1 on a property with a wrapper, that's translated into a call to the init(wrappedValue:) initializer. The instances of 'SmallNumber' that wrap height and width are created by calling 'SmallNumber(wrappedValue: 1)'. The initializer uses the wrapped value that's specified here, and it uses the default maximum value of 12.
+ 
+ When you write arguments in parentheses after the custom attribute, Swift uses the initializer that accpets those arguments to set up the wrapper. For example, if you provide an initial value and a maximum value, Swift uses the init(wrappedValue: maximum:) initializer:
+ */
+struct NarrowRectangle {
+    @SmallNumber(wrappedValue: 2, maximum: 5) var height: Int
+    @SmallNumber(wrappedValue: 3, maximum: 4) var width: Int
+}
+
+var narrowRectangle = NarrowRectangle()
+print(narrowRectangle.height, narrowRectangle.width)
+
+
+narrowRectangle.height = 100
+narrowRectangle.width = 100
+print(narrowRectangle.height, narrowRectangle.width)
+
+/**
+ The instance of 'SmallNumber' that wraps height is created by calling SmallNumber(wrappedValue: 2, maximum: 5), and the instance that wraps width is created by calling SmallNumber(wrappedValue: 3, maximum: 4),
+ 
+ By including arguments to the property wrapper, you can set up the initial state in the wrapper or pass other options to the wrapper when it's created. This syntax is the most general way to use a property wrapper. You can provide wheneer arguments you need to the attribute, and they're passed to the initialzier.
+ 
+ When you include proeprty wrapper arguments, you can also specify an initial value using assignment. Swift treats the assignment like a 'wrappedValue' argument and uses the initializer that accepts the arguments you include.
+ */
+
+struct MixedRectangle {
+    @SmallNumber var height: Int = 1
+    @SmallNumber(maximum: 9) var width: Int = 2
+}
+var mixedRectangle = MixedRectangle()
+print(mixedRectangle.height)
+
+mixedRectangle.height = 20
+print(mixedRectangle.height)
+
+
+/**
+ The instance of SmallNumber that wraps height is created by calling SmallNumber(wrappedValue: 1), which uses the default maximum value of 12. The instance that wraps width is created by calling SmallNumber(wrappedValue: 2, maximum: 9)
+ 
+ 
+    Projecting a Value From a Property Wrapper
+ In addition to the wrapped value, a property wrapper can expose additional functionality by defining a 'projected' value - for example, a property wrapper that manages access to a database can expose a 'flushDatabaseConnection()' method on its projected value. The name of the projected value is the same as the wrapped value, excet it begins with a dollar sign. Because your code can't define properties that start with '$' the projected value never interferes with properties you define.
+ 
+ In the SmallNumber example above, if you try to set the proeprty to a number that's too large, the proeprty wrapper adjusts the number before storing it. The code below adds a projectedValue property to the SmallNumber structure to keep track of whether the prorperty wrapper adjusted the new value for the prorperty before storing that new value.
+ 
+ */
+@propertyWrapper
+struct SmallNumbers {
+    private var number: Int
+    private(set) var projectedValue: Bool
+    
+    var wrappedValue: Int {
+        get { return number }
+        set {
+            if newValue > 12 {
+                number = 12
+                projectedValue = true
+            } else {
+                number = newValue
+                projectedValue = false
+            }
+        }
+    }
+    
+    init() {
+        self.number = 0
+        self.projectedValue = false
+    }
+}
+
+struct SomeStructure {
+    @SmallNumbers var someNumber: Int
+}
+var someStructure = SomeStructure()
+
+someStructure.someNumber = 4
+print(someStructure.$someNumber)
+
+someStructure.someNumber = 55
+print(someStructure.$someNumber)
+
+/**
+ Writing 'someStructure.$someNumber' accesses the wrapper's projected value. After storing a small number like four, the value of 'someStructure.$someNumber' is 'false'. However, the projected value is 'true' after trying to store a number that's too large, like 55.
+ 
+ A proeprty wrapper can return a value of any type as its projected value. In this example, the proeprty wrapper exposes only one piece of information - whether the number was adjusted - so it exposes that Boolean value as its projected value. A wrapper instance of the wrapper as its projected value.
+ 
+ When you access a projected value from code that's part of the type, like a property getter or an instance method, you can omit 'self'. before the property name, just like accessing other properties. The code in the following example refers to the projected value of the wrapper around height and width as $height and $width.
+ 
+ */
+enum Sizes {
+    case small, large
+}
+
+struct SizedRectangle {
+    @SmallNumbers var height: Int
+    @SmallNumbers var width: Int
+    
+    mutating func resize(to size: Sizes) -> Bool {
+        switch size {
+            case .small:
+                height = 10
+                width = 20
+            case .large:
+                height = 100
+                width = 100
+        }
+        
+        return $height || $width
+    }
+}
+/**
+ Because property wrapper syntax is just syntatic sugar for a property with a getter and a setter, accessing height and width behaves the same as accessing any other property. For example, the code in resize(to:) access height and width using their property wrapper. If you call resize(to: .large), the switch case for .large sets the rectangle's height and width to 100. The wrapper prevents the value of those properts from being larger than 12, and it sets the prjected value to true, to record the fact that it adjust thier values. At the end of resize(to:), the return statement checks $height and $width to determine wheter the property wrapper adjusted either height or width.
+ 
+ 
+ 
+ 
+    Global and Local Variables
+ The capabilites describe above for computing and observing properties are also available to global variables and local variables. Global variables are variables that are defined outsied of any function, method, closure, or type context. Local variables are varibles that are defined within a function, method, or closure context.
+ 
+ The global and local variables you have encountered in previous chapters have all been stored variables. Stored variables, like stored properties, provide storage for a value of a certain type an allow that value to be set and retrieved.
+ 
+ However, you can also define computed variables and define observers for stored variables, in either a global or local scope. Computed variables calculate their value, rather than storing it, and they're written in the same way as computed properties.
+ 
+        Global constants and variables are always computed lazily. in a similar manner to Lazy Stored Properties. Unlike lazy stored properties, global constants and variables don't need to be marked with the lazy modifer.
+        
+        Local constants and variabes are never computed lazily.
+ 
+ you can apply a property wrapper to a local stored variable, but no to a global variable or a computed variable.
+ */
+//func someFunction() {
+//    @SmallNumber var myNumber: Int = 0
+//
+//    myNumber = 10
+//    myNumber = 24
+//}
+//
+
+/**
+    Type Properties
+ Instance proeprties are properties that belong to an instace of a particular type. Every time you create a new instance of that type, it has its own set of property values, separate from any other instance.
+ 
+ You can aloso define properties that belong the the type itself, not to any one instace of that type. There will onely ever be one copy of these properties, no matter how many instances of that type you create. These kind of properties are called 'type properties'.
+ 
+ Type properties are useful for defining values that are universal to all instances of a particular type, such as a constant property that all instances can use, or a variable property that stores a value that's global to all instances of that type
+ 
+ Stored type proeprties can be variables or constants. Computed type properties are always decalred as variable properties, in the same way as computed instance properties.
+ 
+        Unlike stored instance properties, you must always give stored type properties a default value. This is because the type itself doesn't have an initializer that can assign a value to a stored type property at initialization time.
+ 
+        Stored type properties are lazily initialized on their first access. They're guranteed to be initialized only once, even when accessed by multiple thread simultaneously, and they don't need to be marked with the lazy modifer.
+ 
+ 
+    Type Property Syntax
+ In C and Objective-C, you define static constants and variables associated with a type as global static variables. In Swift however, type properties are wirtten as part of the type's definition, within the types' outer curly braces, and each type property is explicitly scoped to the type it supports
+ 
+ You define type properties with the 'static' keyword. For computed type properties for class types, you can use the 'class' keyword instaed to allow subclasses to overide the superclass's implementation.
+ */
+struct SomeStruc {
+    static var storedTypeProperty = "some value"
+    static var computedTypeProperty: Int {
+        return 1
+    }
+}
+
+enum SomeEnum {
+    static var storedTypeProperty = "some value"
+    static var computedTypeProperty: Int {
+        return 6
+    }
+}
+
+class SomeClazz {
+    static var storedTypeProperty = "some value"
+    static var computedTypeProperty: Int {
+        return 27
+    }
+    class var overrideableComputedTypeProperty: Int { //overrideable static variation
+        return 107
+    }
+}
+
+/**
+            The computed type property examples above are for read-only computed type properties, but you can also define read-write computed type properties with the same syntax as for computed instance properties.
+ 
+    Querying and Setting Type Properties
+ Type properties are queried and set with dot syntax, just like instance properties. However, type properties are queried and set on the type, not on an instance of that type.
+ */
+print(SomeStruc.storedTypeProperty)
+SomeStruc.storedTypeProperty = "ANOTHER"
+print(SomeStruc.storedTypeProperty)
+
+print(SomeEnum.computedTypeProperty)
+print(SomeClazz.computedTypeProperty)
+
+//220 ~ 221
+
+
+
 
 
 

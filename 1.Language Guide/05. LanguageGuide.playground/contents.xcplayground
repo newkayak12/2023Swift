@@ -16,5 +16,8 @@
         <page name='13.Enumerations'/>
         <page name='14.Structures and Classes'/>
         <page name='15.Properties'/>
+        <page name='16.Method'/>
+        <page name='17.Subscripts'/>
+        <page name='18.Inheritance'/>
     </pages>
 </playground>
