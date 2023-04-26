@@ -19,5 +19,10 @@
         <page name='16.Method'/>
         <page name='17.Subscripts'/>
         <page name='18.Inheritance'/>
+        <page name='19.Initialization'/>
+        <page name='20.Deinitialization'/>
+        <page name='21.Optional Chaining'/>
+        <page name='22.Error Handling'/>
+        <page name='23.Concurrency'/>
     </pages>
 </playground>
