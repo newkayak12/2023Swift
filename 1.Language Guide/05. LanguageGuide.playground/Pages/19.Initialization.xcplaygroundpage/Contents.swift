@@ -220,6 +220,201 @@ let originRect = RectStrcut(origin: PointStruct(x: 2.0, y: 2.0), size: SizeStruc
  
  
     Designated Initializers and Convenience Initializers
- Desinated initializers are the primary initializers for a class
+ Desinated initializers are the primary initializers for a class. A designated initializer fully initializes all properties introduced by that class and calls an appropriate superclass initializer to continue the initialization process up the superclass chain.
+ 
+ Classes tend to have very few desingated initializers, and it's quite common for a class to have only one. Designated initializers are 'funnel' points through which initialization takes place, and through which the initialization process continues up the superclass chain.
+ 
+ Every class must have at least one desinated initializer. In some cases, this requirement is satified by inheriting one or more designated initializers from a superclass.
+ 
+ Convenience initializers are secondary, supporting initializers for a class. You can define a convenience initializer to call a designated initializer from the same class ass the convenience initailizer with some of the designated initializer's parameters set to default values. You can also define a convenince initializer to create an instance of that class for a specific use case or input value type.
+ 
+ You don't have to provide convenience initializers if your class doesn't require them. Create convenience initializers whenever a shortcut to a common initialization pattenr will save time or make initialization of the class clearer in intent
+ 
+ 
+    Syntax for Designated and convenience Initializers
+ Designated initializers for classes are written in the same way as simple initializers for value types:
+ 
+                init ( parameters ) {
+                    statment
+                }
+ 
+ Convenience initializers are written in the same style, but with the convenience modifier placed before the init keyword, separated by a space
+ 
+                convenience init ( parameters ) {
+                        statements
+                }
+ 
+    Initializer Delegation for Class Typs
+ To simplify the relationships between designated and convenience initializers, Swift applies the following three rules for delegation calls between initializers:
+ 
+    Rule 1
+    - A designated initializer must call a designated initializer from its immediate superclass
+ 
+    Rule 2
+    - A convenience initializer must call another initializer from the same class.
+ 
+    Rule 3
+    - A convenience initializer must ultimately call a designated initializer
+ 
+ A simple way to remeber this is:
+    - Designated initializers must always delegate up.
+    - Convenience initializers must always delegate across.
+ 
  */
+/*: ![img](init.png)*/
+/**
+ Here, the superclass has a single desinated and two convenience initializers. One convenience initializer calls another convenience initializer, which in turn the single designated initializer. This satisfies rules 2 and 3 from above. The superclass doesn't itself have a futher superclass, and so rule 1 doesn't apply.
+ 
+ The subclass in this figure has two desinated initializers and one convenience initializer. The convenience initializer must call one of the two designated initializers, because it can only call another initializer from the same class. This satisfies rule 2 and 3 above. Both designated initializers must call the single designated initializer from the superclass, to satisfy rule 1 from above
+ 
+        These rules don't affect how users of you classes create instance of each class. Any initializer in the diagram above can be used to create a fully initialized instance of the class they belong to. The rules only affect how you write the implmentation of the class's initializers.
+ 
+ The figure below shows a more complex class hierachy for four classes It illustrates how the designated initializers in this hiearachy act as 'funnel' points for class initialization, simplifying the interrelationships among classes in the chain:
+ 
+ */
+
+/*: ![img](init2.png)*/
+/**
+    Two-Phase Initialization
+ Class initialization in Swift is a two-phase process. In the first phase, eadh stored property is assigned an initial value by the class that introduced it. Once the initial state for every stored property has been determined, the second phase begins, and each class is given the opportunity to customized its stored properties further before the new instance is considered ready for use.
+ 
+ The use of a two-phase initialization process makes initialization safe, while still giving complete flexibility to each class in a class hierachy. Two-phase initialization prevents property values from being accessed before they're initialized, and prevents property values from being set to a different value by another initalizer unexpectedly.
+ 
+            Swift's two-phase initialization process is similar to initialization in Objective-C. The main difference is that during phase 1, Objective-C assigns zero or null values to every property. Swift's initialization flow is more flexible in that it lets you set custom initial values, and can cop with types for which 0 or nil isn't a valid default value.
+ 
+ Swift's compiler performs four helpful safety-checks to make sure that two-phase initialization is completed without error:
+ 
+    SafetyCheck1
+        A designated initializer must ensure that all of the properties introduced by its class are initialized before it delegates up to a superclass initializer.
+ 
+    As mentioned above, the memory for an object is only considered fully initialized once the initial state of all of its sotred proeprties is known. In order for this rule to be satisfied, a designated initializer must make sure that all of its own properties are initialized before i hands off up the chain.
+ 
+    SafetyCheck2
+        A designated initializer must delegate up to supperclass initializer before assigning a value to an inheirted property. If it dosen't, the new value the designated initializer assigns will be overwritten by the superclass as part of its own initialization.
+ 
+    SafetyCheck3
+        A convenince initializer must delegate to another initializer bfore assigning a value to any property. If it dosen't, the new value the convenience initailzier assigns will be overwritten by its own class's designated initializer.
+ 
+    SafetyCheck4
+        An initializer can't call any instance methods, read the values of any instance properties, or refer th self as a value until after the first phase of initialization is complete.
+ 
+The class instance isn't fully valid until the first phase ends. Properties can only be accessed, and methods can only be called, once the class instance is known to be valid at the end of the first phase.
+ 
+ 
+ 
+    Phase 1
+    - A designated or convenience initializer is called on a class.
+    - Memory for a new instance of that class is allocated. The memory isn't yet initialized
+    - A designated initializer for that class confirms that all stored properties introduced by that class have a value. The memory for these stored properties is now initialized.
+    - The designated initialzier hands off to a superclass initializer to perform the same task for its own stored properties.
+    - This continues up the class inheritance chain until the top of the chain is reached.
+    - Once the top of the chain is reached, and the final class in the chain has ensured that all of its sotred properties have a value, the instance's memory is considered to be fully initialized, and phase 1 is complete.
+ 
+    Phase 2
+    - Working back down from the top of the chain, each designated initailizer in the chain has the option to customize the instance further. Initializers are now able to access self and can modify its properties, call its instance methods, and so on.
+    - Finally, any phase 1 looks for an initialization call for a hypothetical subclass and superclass:
+ 
+ 
+    Initializer Inheritance and Overriding
+ Unlike subclasses in Objective-C, Swift subclasses don't inherit their superclass initializers by default. Swift's approach prevents a situation in which a simple initializer from a superclass is inherited by a more specialized subclass and is used to crate a new instance of the subclass that isn't fully or correctly initialized.
+ 
+ If you want a custom subclass to present one or more of the same initializers as its superclass, you can provide a custom implementation of those initializers within the subclass.
+ 
+ Wehn you write a subclass initializer that matches a superclass designated initializer, you are effectively providing an override of that designated initializer. Therefore, you must write the override modifier before the subclass's initializer definition. Thisis true even if you are overriding an automatically provided default initailzier
+ 
+ As with an overridden property, method, or subscript, the presence of the override modifier prompts Swift to check that the superclass has a matching desingated initializer to be overridden, and validates thath the parameters for your overriding initializer have been specified as intended.
+ 
+ Conversely, if you wirte a subclass initializer that matches a superclass convenience initializer, that superclass convenience initializer can never be called directly by your subclass, as per the rules described above in Initializer Delegation for Class types. Therefore, you subclass is not providing an override of the superclass initializer.
+ */
+class Vehicle {
+    var numberOfWheels = 0
+    var description: String {
+        return "\(numberOfWheels) wheel(s)"
+    }
+}
+
+class Bicycle: Vehicle {
+    override init() {
+        super.init()
+        numberOfWheels = 2
+    }
+}
+
+/**
+    Automatic Initializer Inheritance
+ Superclass initializer are automatically inherited if certain conditions are met. In practice, this means that you don't  need to write initializer overrides in mayny common scenarios, and can inheir your superclass initializers with minimal effort whenever it's safe to do so.
+ 
+    Rule 1
+    If your subclass doesn't define any designated initializers, it automatically inherits all of its superclass designated initializers.
+ 
+    Rule 2
+    If your subclass providies an implementation of all of tis superclass designated initializers - either by inheriting them as per rule1, or by providing a custom implementation as part of its definition
+ 
+ 
+ 
+    Failable Initailizers
+ It's sometimes useful to define a class, structure, or enumeration for which initialization can fail. This failure might be triggered by invalid initialization parameter values, the absence of a required external resource, or some other condition that prevents initialization from succeeding.
+ 
+ To cope with initialization conditions that can fail, define one or more failable initializers as part of a class, structure, or enumeration definition. You write a  failable initializer by placing a question mark after the init keyword( init? ).
+ 
+ A failalbe initializer create an optional value of the type it initializes. You wirte return 'nil' within a failable initializer to indicate a poin at which initializatoin failure can be triggered.
+ 
+            Strictly speaking, initializers don't return a value. Rather, their role is to ensure that 'self' is fully and correctly initialized by the time that initialization ends. Although you write return 'nil' to trigger an initialization failure, you don't use the return keyword to indicate initialization success.
+ 
+ For instance, failalbe initializers are implemented for numeric type conversions. To ensure conversion between numeric types mainains the value exactly, use the init(exactly:) initializer. If the type conversion can't maintain the value, the initializer fails.
+ */
+let wholeNumber: Double = 12345.0
+let pi = 3.14159
+
+if let valueMaintained = Int(exactly: wholeNumber) {
+    print("\(wholeNumber) conversion to Int maintains value of \(valueMaintained)")
+}
+
+let valueChanged = Int(exactly: pi)
+if valueChanged == nil {
+    print("\(pi) conversion to Int doesn't maintain value.")
+}
+
+
+struct Animal {
+    let species: String
+    init?(species: String) {
+        if species.isEmpty {return nil}
+        self.species = species
+    }
+}
+let someCreature = Animal(species: "Giraffe")
+if let giraffe = someCreature {
+    print(giraffe)
+}
+
+let anonymousCreature = Animal(species: "")
+if anonymousCreature == nil {
+    print("FAIL")
+}
+
+/**
+    Failable Initializers for Enumerations
+ You can use a failalbe initializer to select an appropriate enumeration case based on one ore more parameters. The initializer can then fail if the provided parameters don't match an appropriate enumeration case.
+ */
+enum TemperatureUnit {
+    case kelvin, celsius, fahrenheit
+    init? ( symbol: Character ){
+        switch symbol {
+            case "K":
+                self = .kelvin
+            case "C":
+                self = .celsius
+            case "F":
+                self = .fahrenheit
+            default:
+                return nil
+        }
+    }
+}
+
+
+
+
+
 //: [Next](@next)

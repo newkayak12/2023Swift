@@ -1,7 +1,5 @@
 //: [Previous](@previous)
+/*: # Deinitialization*/
 
-import Foundation
-
-var greeting = "Hello, playground"
 
 //: [Next](@next)
