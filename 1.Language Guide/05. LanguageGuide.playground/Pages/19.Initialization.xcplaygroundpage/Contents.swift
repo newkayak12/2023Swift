@@ -413,7 +413,10 @@ enum TemperatureUnit {
     }
 }
 
-
+/**
+    Failable Initializers for Enumerations with Raw values
+ Enumerations with raw values automatically receive a failable initializer, init?(rawValue:), that takes a parameter called rawValue of the appropriate raw-value type and selects a matching enumeration case if one is found, or triggers an initializatoin failure if no matching value exist
+ */
 
 
 
