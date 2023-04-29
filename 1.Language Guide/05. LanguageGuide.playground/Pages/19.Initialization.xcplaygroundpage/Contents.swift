@@ -417,7 +417,152 @@ enum TemperatureUnit {
     Failable Initializers for Enumerations with Raw values
  Enumerations with raw values automatically receive a failable initializer, init?(rawValue:), that takes a parameter called rawValue of the appropriate raw-value type and selects a matching enumeration case if one is found, or triggers an initializatoin failure if no matching value exist
  */
+enum TemperatureUnits: Character {
+    case kelvin = "K", celsius = "C", fahrenheit = "F"
+}
+let fahrenheit = TemperatureUnits(rawValue: "F")
+if fahrenheit != nil {
+    print("This is a defined temperature unit, so initialization succeed")
+}
 
+let unknownUnit = TemperatureUnits(rawValue: "X")
+if unknownUnit == nil {
+    print("FAIL")
+}
+
+/**
+    Propagation of Initialization Failure
+ A failable initializer of a class, structure, or enumeration can delegate across to another failable initializer from the same class, structure, or enumeration. Similarly, a subclass failable initializer can delegate up to a superclass failable initializer.
+ 
+ In ethier case, if you delegate to another initializer that casues initialization to fail, the entire initialization process fails immediately, and no futher initialization code is executed.
+ 
+            A failable initializer can aloso delegate to nonfailable initializer. Use this approch if you need to add a potential failure state to an existing initialization process that doesn't otherwise fail.
+ 
+ The example below defines a subclass of  Product call CartItem. The CartItem class models an item in an online shopping cart. CartItem introduces a stored constant property called quantity and ensures that this property always has a value of at least 1
+ */
+
+class Product {
+    let name: String
+    init?(name: String) {
+        if name.isEmpty { return nil }
+        self.name = name
+    }
+}
+
+class CartItem: Product {
+    let quantity: Int
+    init? (name: String, quantity: Int){
+        if quantity < 1 { return nil }
+        self.quantity = quantity
+        super.init(name: name)
+    }
+}
+
+/**
+The failable initializer for CartItem start by validating that it has received a qunatity value of 1 or more. If the quantity is invalid, the entire initialization process fails immediately and no further initialization code is executed. Likewise, the failable initializer for Product checks the name value, and the initializer process fails immediately if name is the empty string.
+ 
+ 
+ 
+    Overriding a Failable Initializer
+ You can override a superclass failable initializer in a subclass, just like any other initializer. Alternatively, you can override a superclass failable initializer with a subclass nonfailable initialzer. This enables you to define a subclass for which initialization can't fail, even though initialization of the superclass is allowed to fail.
+ 
+ Note that if you override a failable superclass initializer with a nonfailable subclass initialzer, the only way to delegate up to the superclass initializer is to force-unwrap the result of the failable superclass initializer.
+ 
+            You can override a failable initializer with a nonfailable initializer but not the other way around.
+ 
+ The example below defines a class called Docuemnt. This class models a document that can be initialized with a name proeprty that's either a nonempty string value of nil, but can't be an empty string:
+ 
+ */
+class Document {
+    var name: String?
+    init(){}
+    
+    init?(name: String) {
+        if name.isEmpty { return nil }
+        self.name = name
+    }
+}
+
+/**
+ The next example defines a subclass of Docuemnt called AutomaticallyNamedDocument. The AutomaticallyNamedDocument subclass overrides both of the designated initializers introduced by Document. These overrides ensure that an AutomaticallyNamedDocuemnt instance has an initial name value of '[Untitled]' if the instance is initialized without a name, or if an empty string is passed to 'init(name:)' initializer:
+ */
+
+class AutomaticallyNamedDocument: Document {
+    override init() {
+        super.init()
+        self.name = "[Untitled]"
+    }
+    override init?(name: String) {
+        super.init()
+        if name.isEmpty {
+            self.name = "[Untitled]"
+        } else {
+            self.name = name
+        }
+    }
+}
+
+/**
+ The AutomaticallyNamedDocument overrides its superclass's failable 'init?(name:) initializer with a nonfailable init(name:) initializer. Because AutomaticallyNamedDocument copes with the empty string case in a different way than its superclass, its initializer doesn't need to fail, and so it provides a nonfailable version of the initializer instead.
+ 
+ You can use forced unwrapping in an initializer to call a failable initializer from the superclass as part of the implementation of a subclass's nonfailable initializer. For example, the 'UntitledDocument' subclass below is always named
+ "[Untitled]", and it uses the failable 'init(name:)' initializer from its superclass during initialization.
+ */
+
+class UntitledDocuemnt: Document {
+    override init() {
+        super.init(name: "[Untitled]")!
+    }
+}
+
+/**
+ In this case, if the init(name:) initializer of the superclass were ever called with an empty string as the name, the forced unwrapping operation would result in a runtime error. However, because it's called with a string constant, you can see that the initializer won't fail, so no runtime error can occur in this case.
+ 
+        The init! Failable Initializer
+ You typically define a failable innitializer that creates an optional instance of the appropriate type by placing a question makr after the init keyword(init?). Alterantively, you can define a failable initializer that creates an implicitly unwrapped optional instance of the appropriate type. Do this by placing an exclamation point after the init keyword (init!) instead of a question makr.
+ 
+ You can delegate from init? to init! and vice versa, and you can override init? with init! and vice versa. You can also delegate form init to init!, although doing so will trigger an assertion if the init! initializer causes initialization to fail.
+ 
+ 
+    Required Initializers
+ Write the require modifier before the definition of a class initializer to indicate that every subclass of the class must implment that initializer:
+ */
+class SomeClazz {
+    required init() {
+        
+    }
+}
+
+/**
+ You must also write the required modifier before every subclass implementation of a required initializer, to indicate that the initializer requirement applies to further subclasses in the chain. You don't write the override modifier when overriding a required designated initializer:
+ 
+ */
+
+class SomeSubClazz: SomeClazz {
+    required init() {
+        
+    }
+}
+
+/**
+ 
+            You don't have to provide an explicit implementation of a required initializer if you can satisfy the requirement with an inherited intializer.
+ 
+    Setting a Default Property Value with a Closure or Function.
+ If a stored property's default value requires some customization or setup, you can use a closure or global function to provide a customized default value for that property. Whenever a new instance of the type that the property belongs to is initialized, the closure or function is called, and its return value is assigned as the property's default value.
+ 
+ These kinds of closures or functions typically create a temporary value of the same type as the property, tail that value to represent the desired initial state, and then return that temporary value to be used as the property's default value.
+ 
+ Here's a skeleton outline of how a closure can be used to provide a default property value;
+ */
+
+//class SomeSkeletonClazz {
+//    let someProperty: SomeType = {
+//        //create a default value for someProperty inside this closure
+//        //someValue must be of the same type as SomeType
+//        return someValue
+//    }()
+//}
 
 
 //: [Next](@next)
