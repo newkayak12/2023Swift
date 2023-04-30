@@ -24,5 +24,15 @@
         <page name='21.Optional Chaining'/>
         <page name='22.Error Handling'/>
         <page name='23.Concurrency'/>
+        <page name='24.Type Casting'/>
+        <page name='25.Nested Types'/>
+        <page name='26.Extensions'/>
+        <page name='27.Protocols'/>
+        <page name='28.Generics'/>
+        <page name='29.Opaque Types'/>
+        <page name='30.Automatic Reference Couning'/>
+        <page name='31.Memory Safety'/>
+        <page name='32.Access Control'/>
+        <page name='33.Advanced Operators'/>
     </pages>
 </playground>

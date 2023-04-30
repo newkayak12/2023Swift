@@ -251,8 +251,74 @@ testScores["Brain"]?[0] = 72
 
 /**
     Linking Multiple Levels of Chaining
+  
+ You can link together multiple levels of optional chaining to drill down to properties, methods, and subscripts deeper within a model. However, multiple levels of optional chaining don't add more levels of optionality to the returned value.
+ 
+ To put it another way
+    
+    - If the type you are trying to retrieve isn't optional, it will become optional because of the optional chaining.
+    - If the type you are trying to retrieve is already optional, it will not become more optional because of the chaining.
+ 
+ Therefore:
+ 
+    - If you try to retrieve an Int value through optional chaining, an Int? is always returned, no matter how many levels of chaining are used
+    - Similarly, if you try to retrieve an Int? value through optional chaining, an Int? is always returned, no matter how many levels of chaining are used.
+ 
+ The example below tries to access the street property of the address property of the residence property of john. There are two levels of optional chaning in use here, to chain through the residence and address properties, both of which are of optional type:
+ */
+
+if let johnsStreet = john2.residence?.address?.street {
+    print("John's street name is \(johnsStreet).")
+} else {
+    print("Unable to retrieve the address.")
+}
+
+/**
+ The value of john.residence currently contains a valid Residence instance. However, the value of john.residence.address is currently nil. because of this, the call to john.residence?.address?.street fails
+ 
+ Note that in the example above, you are trying to retrieve the value of the street property. The type of this property is String?. The return value of john.residence?.address?.street is therefore also String?, even though two levels of optional chaining are applied in addition to the underlying optional type of the property.
+ 
+ If you set an actual Address instance as the value for john.residence.address, and set an actual value for the address's street property, you can access the value of the street property through multilevel optional chaining:
+ */
+
+let johnsAddress = Address()
+johnsAddress.buildingName = "The Larches"
+johnsAddress.street = "Laurel Street"
+john2.residence?.address = johnsAddress
+
+if let johnsStreet = john2.residence?.address?.street {
+    print("John's street name is \(johnsStreet)")
+} else {
+    print("Unable to retrieve the address")
+}
+
+/**
+ In this example, the attempt to set the address property of john.residence will succeed, becuase the value of john.residence currently contains a valid Residence instance.
+ 
+ 
+    Chaining on Methods with Optional Return Values
+ The previous example shows how to retrieve the value of a property of optional type through optional chaining. You can also use optional chaining to call a method that returns a value of optional type, and to chain on that method's return value if needed.
+ 
+ The example below calls the Address class's buildingIdentifier() method through optional chaining. This method returns a value of type String?. As described above, the ultimate return type of this method call after optional chaining is also String?:
+ */
+
+if let buildingIdentifier = john2.residence?.address?.buildingIdentifier() {
+    print("John's building identifier is \(buildingIdentifier)")
+}
+
+/**
+ If you want to perform further optional chaining on this method's return value, place the optional chining question mark after the method's parentheses:
  
  */
+
+if let beginsWithThe = john2.residence?.address?.buildingIdentifier()?.hasPrefix("The") {
+    if beginsWithThe {
+        print("John's building identifier begins with \"The\".")
+    } else {
+        print("John's building identifier doesn't begin with \"The\".")
+    }
+}
+
 
 
 //: [Next](@next)
