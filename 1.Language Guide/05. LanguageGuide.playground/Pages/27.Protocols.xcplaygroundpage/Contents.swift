@@ -494,5 +494,112 @@ if twoThreeFour == anotherTwoThreeFour {
 }
 
 
+/**
+ Swift provides a synthesized implementatoin of Hashable for the following kinds of custom types:
+ 
+    - Structures that have only stored properties that conform to the Hashable protocol
+    - Enumerations that have only associated types that conform to the Hashable protocol
+    - Enumerations that have no associated types
+ 
+ To receive a synthesized implementation of hash(into:), declare conformance to Hashable in the file that contains the origianl decalration, without implementing a hash(into:) method yourself.
+ 
+ Swift provides a synthesized implementation of comparable for enumerations that don't have a raw value. If the enumeration has associated types, they must all conform to the Comparable protocol. To receive a synthesized implementatoin of '<', declare conformance to Comparable in the file that contains the original enumeration declaration, without implementing a '<' operator yourself.
+ 
+ Swift provieds a synthesized implementation of Comparable for enumerations that dont' ahve a raw value. If the enumeration has associated types, they must all conform to the Comparable protocol. To receive a synthesized implementation of '<', declare conformance to Comparable in the file that contains the origianl enumeration declaration, without implementing a '<' operator yourself. The Comparable protocol's default implementation of '<=', '>', and '>=' provides the remaining comparison operators.
+ 
+ */
+enum SkillLevel: Comparable {
+    case beginner
+    case intermediate
+    case expert(stars: Int)
+}
+
+var levels = [SkillLevel.intermediate, SkillLevel.beginner, SkillLevel.expert(stars: 5), SkillLevel.expert(stars: 3)]
+for level in levels.sorted() {
+    print(level)
+}
+
+/**
+    Collections of Protocol Types
+ 
+ A protocol can be used the type to be stored in a collection such as an array or a dictionary, as mentioned in Protocols as TYpes.
+ */
+let things: [TextRepresentable] = [game, d12, simonTheHamster]
+
+/**
+ It's now possible to iterate over the items in the array, and print each item's textual description
+ */
+
+for thing in things {
+    print(thing.textualDescription)
+}
+
+/**
+ Note that the thing constant is of type TextRepresentable. It's not of type Dice, or DiceGame, or Hamster, even if the actual instance behind the scenes is of one of those types, Nontheless, because it's of type TextRepresentable, and anything that's TextRepresentable is known to have a textualDescription property, it's safe to access thing.textualDescription each time through the loop.
+ 
+ 
+        Protocol Inheritance
+ A protocol can inherit one or more other protocols and can add further requirements on top of the requirements it inherits. The syntax for protocol inheritance is similar to the syntax for class inheritance, but with the option to list mutliple inherited protocols, separated by commas:
+ */
+
+protocol InheritingProtocol: SomeProtocol, AnotherProtocols {
+    
+}
+
+protocol PrettyTextRepresentable: TextRepresentable {
+    var prettyTextualDescription: String { get }
+}
+
+/**
+ This example defines a new protocol, PrettyTextRepresentable, which inherits from TextRepresentable. Anything that adopts PrettyTextRepresentable must satisfy all of the requirements enforced by TextRepresentable, plus the additional requirements enforced by PrettyTextRepresentable. In this example, PrettyTextRepresentable adds a single requirement to provide a gettable prorperty called prettyTextualDescription that returns a String.
+ */
+
+extension SnakesAndLadders: PrettyTextRepresentable {
+    var prettyTextualDescription: String {
+        var output = textualDescription + ":\n"
+        for index in 1...finalSquare {
+            switch board[index] {
+                case let ladder where ladder > 0:
+                    output += "🔺"
+                case let snake where snake < 0:
+                    output += "🔻"
+                default:
+                    output += "o"
+            }
+        }
+        
+        return output
+    }
+}
+
+print(game.prettyTextualDescription)
+
+/**
+    Class-Only Protocol
+ 
+ You can limit protocol adoption to class types by adding the AnyObject protocol to a protocol's inheritance list.
+ */
+
+//
+//protocol SomeClassOnlyProtocol: AnyObject, SomeInheritedProtocol {
+//
+//}
+//
+
+/**
+ In the example above, SomeClassOnlyProtocol can only be adopted by class types. It's a compile-time error to write a structure or enumeration definition that tries to adopt SomeClassOnlyProtocol.
+ 
+        Use a class-only protocol when the behavior defined by that protocol's requirements assumes or requires that a conforming type has reference semantics rather than value semantics
+ 
+ 
+    Protocol Composition
+ It can be useful to requrie a type to conform to multiple protocols at the same time. You can combine multiple protocols into a single requirement with a protocol composition. Protocol composition behave as if you defined a temporary local protocol that has the combined requirements of all protocols in the composition. Protocol compositions don't define any new protocol types.
+ 
+ Protocol compositions have the form SomeProtocol & AnotherProtocol, You can combine multiple protocols into a single requirement with a protocol composition. Protocol compositions behave as if you defined a temporary local protocol that has the combined requirements of all protocols in the composition. Protocol composition don't define any new protocol types.
+ 
+ Protocol compositions have the form someProtocol & AnotherProtocol. You can list as many protocols as you need, separating them with ampersands(&). In addition to its list of protocols, a protocol composition can also contain one class type, which you can use to specifiy a required superclass.
+ 
+ 
+ */
 
 //: [Next](@next)
