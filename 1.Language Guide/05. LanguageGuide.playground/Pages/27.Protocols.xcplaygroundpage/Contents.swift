@@ -599,7 +599,64 @@ print(game.prettyTextualDescription)
  
  Protocol compositions have the form someProtocol & AnotherProtocol. You can list as many protocols as you need, separating them with ampersands(&). In addition to its list of protocols, a protocol composition can also contain one class type, which you can use to specifiy a required superclass.
  
+ */
+protocol Named {
+    var name: String { get }
+}
+protocol Aged {
+    var age: Int { get }
+}
+struct Persons: Named, Aged {
+    var name: String
+    var age: Int
+}
+
+func withHappyBirthday(to celebrator: Named & Aged){
+    print("Happy birthday, \(celebrator.name), you're \(celebrator.age)!")
+}
+
+let birthdayPersons = Persons(name: "Macolm", age: 21)
+withHappyBirthday(to: birthdayPersons)
+
+/**
+ In this example, the Named protocol ahs a single requirement for a gettable String property called name. The Aged protocol has a single requirement for a gettable Int property called age, Both protocols are adopted by a structure aclled Persons.
+ 
+ The example also defines a withHappyBrithday(to:) function. The type of the celebrator parameter is Named & Aged, which means  "any type that conforms to both the Named, And Aged protocols." It doesn't matter which specific type is passed to the function, as long as it conforms to both of the required protocols.
+ 
+ The example then creates a new Persons instance called birthdayPerson and passes this new instance to the wishHappyBirthday(to:) function. Because Persons conforms to both protocols, this call is valid and the wishHappyBirthday(to:) function can print its birthday greeting.
  
  */
+
+class Location {
+    var latitude: Double
+    var longitude: Double
+    
+    init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+
+class City: Location, Named {
+    var name: String
+    init( name: String, latitude: Double, longitude: Double ){
+        self.name = name
+        super.init(latitude: latitude, longitude: longitude)
+    }
+}
+
+func beginConcert(in location: Location & Named){
+    print("Hello")
+}
+
+let seattle = City(name: "Seattle", latitude: 47.2, longitude: -123.2)
+beginConcert(in: seattle)
+
+/**
+ The beginConcert(in:) function takes a parameter of type Location & named, which means "any type that's a subclass of Location and that conforms to the Named protocol." In this case, City satisfies both requirements.
+ 
+ Passing
+ */
+
 
 //: [Next](@next)
