@@ -655,8 +655,126 @@ beginConcert(in: seattle)
 /**
  The beginConcert(in:) function takes a parameter of type Location & named, which means "any type that's a subclass of Location and that conforms to the Named protocol." In this case, City satisfies both requirements.
  
- Passing
+ Passing birthdayPerson to the beginConcert(in:) fuction is invalid because Person isn't a subclass of Location. Likewise, if you made a subclass of Location that didn't conform to Named protocol, calling beginConcert(in:) with an instance of that type is also invalid.
+ 
+ 
+    Checking for Protocol Conformance
+ You can use the 'is' and 'as' operators described in Type Casting to check for protocol conformance, and to cast to a specific protocol. Checking for and casting to a protocol follows exactly the same syntax as checking for and casting to a type:
+ 
+ 
+    - The 'is' operator returns true if an instance conforms to a protocol and returns false if it doesn't.
+    - The 'as?' version of the downcast operator returns an optional value of the protocol's type, and this value is nil if the instance doesn't conform to that protocol.
+    - The 'as!' version of the downcast operator forces the downcast to the protocol type and trigger a runtime error if the downcast doesn't succeed.
+ 
  */
+
+protocol HasArea {
+    var area: Double { get }
+}
+
+/**
+ Here are two classes, 'Circle' and 'Country', both of which conform to the HasArea protocol:
+ */
+
+class Circle: HasArea {
+    let pi = 3.1415927
+    var radius: Double
+    var area: Double { return pi * radius * radius }
+    init(radius: Double) { self.radius = radius }
+}
+class Country: HasArea {
+    var area: Double
+    init ( area: Double ) { self.area = area }
+}
+
+/**
+ The Circle class implements the area protperty requirement as a computed property, based on stroed radius property. The Country class implements the 'area' requirement directly as a stored property. Both classes correctly conform to the HasArea protocol.
+ */
+
+class Animal {
+    var legs: Int
+    init ( legs: Int ) { self.legs = legs }
+}
+
+/**
+ The Circle, Country and Animal classes don't have a shared base class. Nontheless, they're all classes, and so instances of all three types can be used to initialize an array that stores values of type 'AnyObject':
+ */
+
+let objects: [AnyObject] = [
+    Circle(radius: 2.0),
+    Country(area: 243_610),
+    Animal(legs: 4)
+]
+
+/**
+ The 'objects' array is initialized with an array literal containing a 'Circle' instance with a radius of 2 units: a Country instance initialized with the surface area of the United Kingdom in square kilometers; and an Animal instance with four legs.
+ 
+ The objects array can now be iterated, and each object in the array can be checked to see if it conforms to the HasArea protocol:
+ */
+
+for object in objects {
+    if let objectWithArea = object as? HasArea {
+        print("Area is \(objectWithArea.area)")
+    } else {
+        print("Something that doesn't have an area.")
+    }
+}
+
+/**
+ Whenever an object in the array conforms to the HasArea protocol, the optional value returned by the 'as?' operator is unwrapped with optional binding into a constant called objectWithArea. The objectWithArea constant is known to be of type 'HasArea', and so its 'area' property can be accessed and printed in a type-safe way.
+ 
+ Note that the underlying objects aren't changed by the casting process. They continue to be a Circle, a Country and an Animal. However, at the point that they're stored in the objectWithArea constant, they're only known to be of type HasArea, and so only their 'area' property can be accessed.
+ 
+ 
+ 
+    Optional Protocol Requirements
+ You can define 'optional requirements' for protocols. These requirements don't have to be implemented by types that conform to the protocol. Optional requirements are prefixed by the 'optional' as part of the protocol's definition. Optional requirements are available so that you can write code that interoperates with Objective-C. Both the protocol and the optional requirement must be marked with the '@objc' attribute. Note that '@objc' protocols can be adopted only by classes that inherit from Objective-C classes or other '@objc' classes. They can't be adopted by structures or enumerations.
+ 
+ When you use a method or property in an optional requirement, its type automatically becomes an optional. For example, a method of type `( Int ) -> String` becomes `(( Int ) -> String)`?. Note that the entire function type is wrapped in the optional, not the method's return value.
+ 
+ An optional protocol requirement can be called with optional chaining, to account for the possiblity that the requirement was not implemented by a type that conforms to the protocol. You check for an implementation of an optional method by writing a question mark after the naming of the method when it's called, such as someOptionalMethod?(someArgument). For informationi on optional chaining, see Optional Chaining.
+ 
+ The following example defines an integer-counting class called Counter, which uses an external data to provide its increment amount. This data source is defined by the CounterDataSource protocol, which has two optional requirements:
+ */
+
+import Foundation
+@objc protocol CounterDataSource {
+    @objc optional func increment(forCount count: Int) -> Int
+    @objc optional var fixedIncrement: Int { get }
+}
+
+/**
+ The CounterDataSource protocol defines an optional method requirement called increment(forCount:) and an optional property requirement called fixedIncrement. These requirements define two different ways for data source to provide an appropriate increment amount for a `Counter` instance.
+ 
+ 
+        Strictly speaking, you can write a custom class that conform to `CounterDataSource` without implementing either protocol requirement. They're both optional, after all. Although technically allowed, this wouldn't make for a very good data source.
+ 
+ The `Counter` class, defined below, has an optional dataSource property of type `CounterDataSource?`:
+ */
+
+class Counter {
+    var count = 0
+    var dataSource: CounterDataSource?
+    
+    func increment() {
+        if let amount = dataSource?.increment?(forCount: count){
+            count += amount
+        } else if let amount = dataSource?.fixedIncrement {
+            count += amount
+        }
+    }
+    
+}
+
+/**
+ The Counter class stores its current value in a variable property called `count`. The Counter class also defines a method called `increment`, which increments the count property every time the method is called.
+ 
+ The `increment()` method first tries to retrieve an increment amount by looking for an implementation of the `increment(forCount:)` method on its data source. The `increment()` method uses optional chaining to try to call `increment(forCount:)`, and passes the current `count` value as the method's single argument.
+ 
+ */
+
+
+
 
 
 //: [Next](@next)
