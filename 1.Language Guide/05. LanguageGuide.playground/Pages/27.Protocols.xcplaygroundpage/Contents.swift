@@ -771,7 +771,133 @@ class Counter {
  
  The `increment()` method first tries to retrieve an increment amount by looking for an implementation of the `increment(forCount:)` method on its data source. The `increment()` method uses optional chaining to try to call `increment(forCount:)`, and passes the current `count` value as the method's single argument.
  
+ Note that two levels of optional chaining are at play here. First, it's possible that dataSource may be nil, and so dataSource has a question mark after its name to indicate that increment(forCount:) should be called only if dataSource isn't nil. Second, even if possibility that increment(forCount:) might not be implemented is also handled by optional chaining. The call to increment(forCount:) happens only if increment(forCount:) exsits - that is, if it isn't nil. This is why increment(forCount:) is also written with a question mark after its name.
+ 
+ Because the call to increment(forCount:) can fail for either of these two reasons, the call returns an `optional Int` value. This is true even though increment(forCount:) is defined as returning a non-optional Int value in the definition of CounterDataSrouce. Even information about using multiple optional chaining operations.
+ 
+ After calling increment(forCount:), the optional Int that it returns is unwrapped into a constant called amount, using optional binding. If the optional Int does contain a value - that is, if the delegate and method both exist, and the method returned a value - the unwrapped amount is added onto the stored count property, and incrementation is complete.
+ 
+ If it's not possible to retrieve a value from the increment(forCount:) method - either because dataSource is nil, or because the data source doesn't implement increment(forCount:) = then the increment() method tries to retrieve a value from the data source's fixedIncrement property instead. The fixedIncrement property is also an optional requirement, so its value is an `optional Int` value, even though `fixedIncrement` is defined as a non-optional Int property as part of the counterDataSource protocol definition.
+ 
+ 
+ Here's a simple CounterDataSource implementation where the data source returns a constant value of 3 every time it's queried. It does this by implementing the optional `fixedIncrement` property requirement:
  */
+
+class ThreeSource: NSObject, CounterDataSource {
+    let fixedIncrement = 3
+}
+
+var counter = Counter()
+counter.dataSource = ThreeSource()
+
+for _ in 1...4 {
+    counter.increment()
+    print(counter.count)
+}
+
+/**
+ The code above creates a new `Counter` instance; sets its data source to be a new ThreeSource instance; and calls the counter's increment() method four times. As expected, the counter's count property increases by three each time increment() is called.
+ 
+ */
+
+class TowardsZeroSource: NSObject, CounterDataSource {
+    func increment(forCount count: Int) -> Int {
+        if count == 0 {
+            return 0
+        } else if count < 0 {
+            return 1
+        } else {
+            return -1
+        }
+    }
+}
+
+
+/**
+ The `TowardsZeroSource` class implements the optional increment(forCount:) method form the `CounterDataSource` protocol and uses the `count` argument value to work out which direction to count in. If `count` is already zero, the method returns 0 to indicate that no further counting should take place.
+ 
+ You can use an instance of `TowardsZeroSource` with the existing `Counter` instance to count from -4 to zero. Once the counter reaches zero, no more counting takes place;
+ */
+
+counter.count  = -4
+counter.dataSource = TowardsZeroSource()
+for _ in 1...5 {
+    counter.increment()
+    print(counter.count)
+}
+
+/**
+    Protocol Extensions
+ Protocols can be extended to provide method, initializer, subscript, and computed property implementatoins to conforming types. This allows you to define behavior on protocols themselves, rather than in each type's individual conformance or in a global function.
+ 
+ For example, the `RandomNumberGenerator` protocol can be extended to provide a `randomBool()` emthod, which uses the result of the required `random()` method to return a random `Bool value;
+ */
+
+
+extension RandomNumberGenerator {
+    func randomBool() -> Bool {
+        return random() > 0.5
+    }
+}
+
+
+/**
+ By creating an extension on the protocol, all conforming types automatcially gain this method implementation without any additional modification.
+ */
+
+
+let generators = LinearCongruentialGenerator()
+print("Here's a random number: \(generators.random())")
+print("And here's a random Boolean: \(generators.randomBool())")
+
+/**
+    Providing Default Implementatoins
+ You can use protocol extensions to provide a default implementation to any method or computed property requirement of that protocol. If a conforming type provides its own implementation of a required method or property, that implementatoin will be used instead of the one provided by the extension.
+ 
+            Protocol requirements with default implementations provided by extensions are distinct from optional protocol requiremnts. Although conforming types don't have to provide their own implementation or either, requirements with default implementations can be called without optional chining.
+ 
+ For example, the `PrettyTextRepresentable` protocol, which inheirts the `TextRepresentable` protocol can provide a default implementation of its required `prettyTextualDescription` property to simply return the result of accessing the `textualDescription` property:
+ */
+
+extension PrettyTextRepresentable {
+    var prettyTextualDescription: String {
+        return textualDescription
+    }
+}
+
+/**
+    Adding Constraint to Protocol Extensions
+ When you define a protocol extension, you can specify constraints that conforming types must satisfy before the mehtods and properties of the extension are available. You write these constraints after the name of the protocol you're extending by writing a generic where cluase.
+ 
+ For example, you can define an extension to the `Collection` protocol that applies to any collection whose elements conform to the `Equatable` protocol. By constraining a collection's elements to the `Equatable` protocol, a part of the standard libaray, you can use the `==` and `!=` operators to check for equality and inequality between two elements.
+ 
+ 
+ */
+
+extension Collection where Element: Equatable {
+    func allEqual() -> Bool {
+        for element in self {
+            if element != self.first {
+                return false
+            }
+        }
+        
+        return true
+    }
+}
+
+let equalNumbers = [100, 100, 100, 100, 100]
+let differentNumbers = [100, 100, 100, 100, 200]
+
+print(equalNumbers.allEqual())
+print(differentNumbers.allEqual())
+
+
+
+
+
+
+
 
 
 
