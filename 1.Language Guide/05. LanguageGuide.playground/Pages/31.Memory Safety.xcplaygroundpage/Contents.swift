@@ -1,7 +1,13 @@
 //: [Previous](@previous)
-
 import Foundation
+/*: # Memory Safety*/
+/**
+ 
+ 
+ 
+ 
+ 
+ */
 
-var greeting = "Hello, playground"
 
 //: [Next](@next)

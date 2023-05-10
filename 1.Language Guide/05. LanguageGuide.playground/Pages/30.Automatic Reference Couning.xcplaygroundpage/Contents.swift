@@ -313,31 +313,194 @@ department.courses = [intro, intermediate, advanced]
         The underlying type of an optional value is `Optional`, which is an enumeration in the Swift standard library. However, optional are an exception to the rule that value types can't be marked with `unowned`
     
         The optional that wraps the class doesn't use reference counting, so you don't need to maintain a strong reference to the optional.
+ 
+ 
+    Unowned References and Implicitly Unwrapped Optional Properties
+ The examples for weak and unowned references above cover two of the more common scenarios in which it's necessary to break a strong reference cycle.
+ 
+ The `Person` and `Apartment` example shows a situtation where one property that's allowed to be `nil` an another property that can't be `nil` have the potential to casue a strong reference cycle. This scenraio is best resolved with an unowned reference.
+ 
+ However, there's a third scenario, in which both properties should always have a value, and neither property should ever be `nil` once initialization is complete. In this scenario, it's useful to combine an unowned property on one class with an implicitly unwrapped optional property on the other class.
+ 
+ This enables both properties to be accessed directly once initialization is complete, while still avoiding a reference cycle. This section shows you how to set up such a relationship.
+ 
+ The example below defines two class, `Country` and `City`, each of which stores an instance of the other class as property. In this data model, every country must always have a capital city, and every city must always belong to a country. To represent this, the `Country` class has a `capitalCity` property, and the `City` class has a `country` property:
+ */
+
+class Country {
+    let name: String
+    var capitalCity: City!
+    init( name: String, capitalName: String ) {
+        self.name = name
+        self.capitalCity = City(name: capitalName, country: self)
+    }
+}
+
+class City {
+    let name: String
+    unowned let country: Country
+    init( name: String, country: Country ) {
+        self.name = name
+        self.country = country
+    }
+}
+
+/**
+ To set up the interdependency between the two classes, the initializer for `City` takes a `Country` instance, and stores this instacne in its `country` property.
+ 
+ The initializer for `City` is called from within the initializer for `Country`. However, the initializer for `Country` can't pass `self` to the `City` initializer until a new `Country` instance is fully initialized, as described in `Two-Phase Initialization`.
+ 
+ To cope with this requirement, you declare the `capitalCity` property of `Country` as an implicitly unwrapped optional property. indicated by the exclamation point at the end of its type annotation (`City!`). This means that the `capitalCity` property has a default value of `nil`, like any other optional, but can be accessed without the need to unwrap its value as described in `Implicitly Unwrapped Optionals`.
+ 
+ Because `capitalCity` has a default `nil` value, a new `Country` instance is considered fully initialized as soon as the `Country` instance sets its `name` property within its initializer. This means that the `Country` initializer can start to reference and pass around the implicit `self` property as soon as the `name` property is set. The `Country` initializer can therefore pass self as one of the parameters for the `City` initializer when the `Coutnry` initializer is setting its own `capitalCity` property.
+ 
+ All of this means that you can create the `Country` and `City` instances in a single statement, without creating a strong reference cycle, and the `capitalCity` property can be accessed directly, without needing to use an excalmation point to unwrap its optional value:
+ */
+
+var country = Country(name: "Canda", capitalName: "Ottawa")
+print("\(country.name)'s capital city is called \(country.capitalCity.name)")
+
+/**
+ In the example above, the use of an implicitly unwrapped optional means that all of the two-phase class initializer requirements are satisfied. The `capitalCity` property can be used and accessed like a non-optional value once initialization is complete, while still avoiding a strong reference cycle.
+ 
+ 
+    Strong Reference Cycle for Closures
+ You saw above how a strong reference cycle can be created when two class instance properties hold a strong reference to each other. You also saw how to use weak and unowned references to break these strong reference cycles.
+ 
+ A strong reference cycle can also occur if you assign a closure to property of a class instance, and the body of that closure captures the instance. This capture might occur because the closure's body accesses a property of the instance, such as `self.someProperty`, or because the closure calls a method on the instance, such as `self.someMethod()`. In either case, these accesses caus the closure to "capture" `self`, creating a strong reference cycle.
+ 
+ This strong reference cycle occurs because closures, like classes, are reference types. When you assign a closure to property, you are assigning a reference to that closrue. In essence, it's the same problem as above - two strong references are keeping each other alive. However, rather than two class instances, this time it's a class isntance and a closure that are keeping each other alive.
+ */
+
+class HTMLElement {
+    let name: String
+    let text: String?
+    
+    lazy var asHTML: (() -> String) = {
+        if let text = self.text {
+            return "<\(self.name)>\(text)</\(self.name)>"
+        } else {
+            return "</\(self.name)"
+        }
+    }
+    
+    init (name: String, text: String? = nil) {
+        self.name = name
+        self.text = text
+    }
+    deinit {
+        print("\(name) is being deinitialized")
+    }
+}
+
+/**
+ The `HTMLElement` class defines a lazy property called `asHTML`. This property references a closure that combines `name` and `text` into an HTML, string fragment. The `asHTML` property is of type `() -> String`, or "a function that takes no parameters, and returns a `String` value".
+ 
+ By default, the `asHTML` property is assigned a closure that returns a string representation of an HTML tag. This tag contains the optional `text` value if it exists, or no text content if `text` doesn't exist. For a paragraph element, the closure would return.
+ 
+ The `asHTML` property is named and used somewhat like an instance method. However, because `asHTML` is a closure property rather than an instance method, you can replace the default value of the `asHTML` property with a custom closure, if you want to change the HTML rendering for a particular HTML element.
+ */
+
+let heading = HTMLElement(name: "h1")
+let defaultText = "SomeDefaultText"
+heading.asHTML = {
+    return "<\(heading.name)>\(heading.text ?? defaultText)</\(heading.name)>"
+}
+
+print(heading.asHTML())
+
+/**
+ 
+             The `asHTML` property is declared as a lazy property, because it's only need if and when the element actutally needs to be rendered as a string value for some HTML oupute target. The fact that `asHTML`, is a lazy property means that you can refer to `self` within the default closure, because the lazy property will not be accessed until after initialization has been completed and `self` is known to exist.
+ 
+ 
+ The HTMLElement class provides a single initialzier, which takes a `name` argument and (if desired) a text argument to initialize a new element. The class also defines adeinitializer, which prints a message to show when  an `HTMLElement` instance is deallocated.
+ 
+ */
+
+var paragraph: HTMLElement? = HTMLElement(name: "p", text: "hello, world")
+print(paragraph?.asHTML())
+
+/**
+ The instance's `asHTML`. property holds a strong reference to its closure. However, because the closure referes to `self` within its body, the closure `captures` self, which means that it holds a strong reference back to the `HTMLElement` instance. A strong reference cycle is created between the two.
+ 
+ If you set the `paragraph` varaible to `nil` and break its strong reference to the `HTMLElement` instance, neither the `HTMLElement` instance nor its closure are deallocated, because of the strong reference cycle:
+ */
+
+paragraph = nil
+
+/**
+ Note that the message in the `HTMLElement` deinitializer isn't printed, which shows that the `HTMLElement` instance isn't deallocated.
+ 
+ 
+ 
+    Resolving Strong Reference Cycles for Closures
+ You resolve a strong reference cycle between a closure and a class instance by defining a capture list as part of the closure's definition. A capture list defines the rules to use when capturing one or more reference types within the closure' body. As with strong reference cycles between two class instances, you declare each captured reference to be a weak or unowned reference rather than a strong reference. The appropriate choice of weak or unowned depends on the relationships between the different parts of your code.
+ 
+            Swift requires you to write `self.someProperty` or `self.someMethod()` whenever you refer to a member of self within a closure. This helps you remember that it's possible to capture `self` by accident.
+ 
+    Defining a Capture List
+ Each item in a capture list is pairing of the `weak` or `unowned` keyword with a reference to a class instance or a variable initialized with some value. These parinings are writeen within a pair of square braces, separated by commas.
+
+ 
+         lazy var someClosure = {
+            [unowned self, weak delegate = self.delegate] (index: Int, stringToProcess: String) -> String in
+                //closure
+         }
+ 
+ If a closure doesn't specify a parameter list or return type because theycan be inferred from context, place the capture list at the very start of the closure, followed by the `in` keyword;
+ 
+        lazy var someClosure = {
+            [unowned self, weak delegate = self.delegate] in
+ 
+                //closure
+    
+        }
+ 
+
+    Weak and Unowned References
+ Define a capture in a closure as an unowned reference when the closure and the instance it captures will always refer to each other, and will always be deallocated at the same time.
+ 
+ Conversely, define a capture as a weak reference when the captured reference may become `nil` at some point in the future. Weak references are always of an optional type, and automatically become `nil` when the instance they reference is deallocated. This enables you to check for thier existence within the closure's body
+ 
+        If the captured reference will never become `nil`, it should always be captured as an unowned reference, rather than a weak reference.
  */
 
 
+class HTMLElements {
+    let name: String
+    let text: String?
+    
+    lazy var asHTML: (() -> String) = {
+        [unowned self] in
+        if let text = self.text {
+            return "<\(self.name)>\(text)</\(self.name)>"
+        } else {
+            return "</\(self.name)>"
+        }
+    }
+    
+    init (name: String, text: String? = nil) {
+        self.name = name
+        self.text = text
+    }
+    deinit {
+        print("\(name) is being deinitialized")
+    }
+}
 
+/**
+ This implementations of `HTMLElements` is identical to the previous implementation, apart from the addition of a capture list within the `asHTML` closure. In this case, the capture list is `[unowned self]`, which means "capture self as an unowned reference rather than a strong reference
+ */
 
+var para: HTMLElements? = HTMLElements(name: "p", text: "Hello, world")
+print(para!.asHTML())
 
+/**
+ This time, the capture of `self` by the closure is an unowned reference, and doesn't keep a strong hold on the `HTMLElements` instance it has captured. If you set the strong reference from the `para` variable to `nil`, the `HTMLElements` instance is deallocated, as can be seen from the printing of its deinitializer message in the example below:
+ */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+para = nil
 
 
 
