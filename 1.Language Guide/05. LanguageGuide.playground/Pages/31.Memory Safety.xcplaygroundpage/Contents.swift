@@ -142,9 +142,30 @@ oscar.shareHealth(with: &maria)
  
  
     Conflicting Access to Properties
- Types like structures, tuples and enumerations are made up of individual constituent values, such as properties of a structure or the elements of a tuple.
+ Types like structures, tuples and enumerations are made up of individual constituent values, such as properties of a structure or the elements of a tuple. Because these are value types, mutating any piece of the value mutates the whole value, meaning read or wrtie access to one of the properties requires read or write access to the whole value. For example, overlapping write accesses to the elements of a tuple produces a conflict;
  */
 
+var playerInformation = (health: 10, energy: 20)
+//balance(&playerInformation.health, &playerInformation.energy) //error!
 
+/**
+ 
+ In the example above, calling `balance(:_:)` on the elemnts of a tuple produces a conflict because there are overlapping write accesses to `playerInformation`. Both `playerInformation.health` and `palyerInformation.energy` are passed as in-out parameters, which means `balance(_:_:)` needs wrtie access to them for the duration of the function call. In both cases, a write access to the tuple elemnt requires a write access to the entire tuple. This means there are two write accesses to `playerInformation` with durations that overlap, causing a conflict.
+ 
+ */
+
+var holly = Player(name: "Holly", health: 10, energy: 10)
+balance(&holly.health, &oscar.energy)
+
+/**
+ In the example above, Oscar's health and energy are passed as the two in-out parameters to `balance(_:_:)`. The compiler can prove that memory safety is preserved because the two stored properties don't interact in any way.
+ 
+ The restriction against overlapping access to properties of a structure isn't necessary to preserve memory safety. Memory safety is the desire guarantee, but exclusive access is a stricter requirement than memory saftey - which means some code preserves memory safety, even though it violates exclusive access to memory. Swift allows this memory-safe code if the compiler can prove that the nonexclusive access to memory is still safe. Specifically, it can prove that overlapping access to properties of a structure is safe if the following conditions apply:
+ 
+    - You're accessing only stored properties of an instance, not computed properties or class properties.
+    - The structure is the value of a local variable, not a global variable.
+    - The structure is either not captured by any closures, or it's captured only by nonescaping closures.
+ 
+ */
 
 //: [Next](@next)
