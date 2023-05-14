@@ -281,8 +281,59 @@ public struct TrackedString2 {
  
     Protocol Inheritance
  If you define a new protocol that inherits from a existing protocol, the new protocol can have at most the same access level as the protocol it inherits from. For example, you can't write a public protocol that inherits from an internal protocol.
+ 
+ 
+    Protocol Conformance
+ A type can conform to a protocol with a lower access level than type itself. For example, you can define a public type that can be used in other module, but whose conformance to an internal protocol can only be used within the internal protocol's defining module.
+ 
+ The context in which a type conforms to a particular protocol is the minimum of the type's access level and the protocol's access level. For example, if a type is public, but a protocol it conforms to is internal, the type's conformance to that protocol is also internal.
+ 
+ When you write or extend a type to conform to protocol, you must ensure that the type's implementation of each protocol requirement has at least the same access elvel as the type's conformance to that protocol. For example, if a public type conforms to an internal protocol, the type's implementation of each protocol requirement must be at least internal.
+ 
+            In Swift, as in Objective-C, protocol conformance is global - it isn't possible for a type to conform to a protocol in two difference ways within the same program.
+ 
+ 
+ 
+    Extensions
+ You can extend a class, strucrue, or enumeration in any access context in which the class, structure, or enumeration is available. Any type members added in an extension have the same default access level as type members declared in the original type being extended. If you extend a file-private type, any new type mebmers you add have a default access level of file private If you extend a private type, any new type members you add have a default access level of private.
+ 
+ Alternatively, you can mark an extension with an explicit access-level modifier ( for example, `private` ) to set a new default access level for all memvers defined within the extension. This new default can stll be overriden within the extension for individual type members.
+ 
+ You can't provide an explicit access-level modifier for an extension if you're using that extension to add protocol conformance. Instead, the protocol's own access elvel is used to provide the default access level for each protocol requirement implementation within the extension.
+ 
+    Prviate Members in Extensions
+ Extensions that are in the same file as the class, structure, or enumeration that they extend behave as if the code in the extension had been written as part of the original type's declaration. As a result, you can:
+ 
+    - Declare a private member in the original declararion, and acces that member from extensions in the same file.
+    - Declare a private member in one extension, and access that member from another extension in the same file.
+    - Declare a private member in an extension, and access that mebmer from the original declaration in the same file.
+ 
+ This behavior means you can use extensions in the same way to organize your code, whether or not your types have private entities. For example, given the following simple protocol:
  */
 
+protocol SomeProtocol {
+    func doSomething()
+}
+
+// You can use an extension to add prtocol conformance, like this.
+
+struct SomeStruct {
+    private var privateVariable = 12
+}
+
+extension SomeStruct: SomeProtocol {
+    func doSomething() {
+        print(privateVariable)
+    }
+}
+
+/**
+    Generics
+ The access level for a generic type or generic function is the minium of the access elvel of the generic type or function itself and the access level of any type constraints on its type parameters
+ 
+    Type Aliases
+ Any type aliases you define are treated as distinct types for the purposes of access control. A type alias can have an access level less than or equal to the access elvel of the type it aliases. For example, a private type alias can alias a private, file-private, interal, public or open type, but a public type alias can't alias an internal, file-private, or private type.
+ */
 
 
 //: [Next](@next)
